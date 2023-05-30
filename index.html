@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Comprobar dominio</title>
+</head>
+<body>
+  <form>
+    <input type="text" id="dominio" placeholder="Introduce tu dominio">
+    <button type="button" onclick="comprobarDominio()">Comprobar</button>
+  </form>
+
+  <textarea id="adsTxtContent" rows="10" cols="50" readonly></textarea>
+
+  <script>
+    function comprobarDominio() {
+      var dominio = document.getElementById("dominio").value;
+      var url = "http://" + dominio + "/ads.txt";
+
+      // Crear una nueva petición AJAX
+      var xhr = new XMLHttpRequest();
+      xhr.onreadystatechange = function() {
+        if (xhr.readyState === 4 && xhr.status === 200) {
+          // Obtener el contenido del archivo ads.txt
+          var adsTxtContent = xhr.responseText;
+
+          // Mostrar el contenido en el campo de texto
+          var adsTxtField = document.getElementById("adsTxtContent");
+          adsTxtField.value = adsTxtContent;
+        }
+      };
+      xhr.open("GET", url, true);
+      xhr.send();
+    }
+  </script>
+</body>
+</html>
