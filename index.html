@@ -12,7 +12,15 @@
 
   <script>
     function comprobarDominio() {
-      var dominio = document.getElementById("dominio").value;
+      var dominioInput = document.getElementById("dominio");
+      var dominio = dominioInput.value.trim();
+
+      // Remover "http://" o "https://"
+      dominio = dominio.replace(/^https?:\/\//i, '');
+
+      // Remover "/ads.txt"
+      dominio = dominio.replace(/\/ads.txt$/i, '');
+
       var url = "show.php?dominio=" + dominio;
       window.location.href = url;
     }
