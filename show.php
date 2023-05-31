@@ -50,6 +50,12 @@
 <body>
   <?php
     $dominio = $_GET['dominio'];
+    
+    if (strpos($dominio, 'http://') === 0 || strpos($dominio, 'https://') === 0) {
+      echo "Verifica la URL o prueba nuevamente.";
+      exit;
+    }
+    
     $url = "https://" . $dominio . "/ads.txt";
     $tempFilePath = "/tmp/ads.txt";
 
@@ -110,12 +116,19 @@
           }
 
           // Mostrar el estado (si hay errores o no)
-          if (!$errors) {
+          if (empty($tempFileContent)) {
+            echo "<div id='resultado'>⚠️ El archivo ads.txt está vacío.</div>";
+            $errors = true;
+          } elseif (!$errors) {
             echo "<div id='resultado'>✅ No se encontraron errores en el archivo ads.txt.<br>El archivo es accesible por AdSense</div>";
           }
         ?>
       </div>
     </div>
+  </div>
+
+  <div style="margin-top: 20px; text-align: center;">
+    <button onclick="window.history.back();">Verificar otra URL</button>
   </div>
 </body>
 </html>
