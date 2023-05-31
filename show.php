@@ -48,17 +48,27 @@
   </style>
 </head>
 <body>
-  <?php
-    $dominio = $_GET['dominio'];
     
-    if (strpos($dominio, 'http://') === 0 || strpos($dominio, 'https://') === 0) {
-      echo "Verifica la URL o prueba nuevamente.";
-      exit;
-    }
-    
-    $url = "https://" . $dominio . "/ads.txt";
-    $tempFilePath = "/tmp/ads.txt";
+<?php
+$dominio = $_GET['dominio'];
 
+if (strpos($dominio, 'http://') === 0 || strpos($dominio, 'https://') === 0) {
+  echo "Verifica la URL o prueba nuevamente.";
+  exit;
+}
+
+$urls = array(
+  "https://" . $dominio . "/ads.txt",
+  "http://" . $dominio . "/ads.txt"
+);
+
+$tempFilePath = "/tmp/ads.txt";
+
+foreach ($urls as $url) {
+  // Incluir el protocolo "http://" en la URL
+  $url = str_replace("https://", "http://", $url);
+
+  try {
     // Descargar el archivo ads.txt temporalmente
     $fileContent = file_get_contents($url);
 
@@ -67,7 +77,38 @@
 
     // Leer el contenido del archivo temporal
     $tempFileContent = file_get_contents($tempFilePath);
-  ?>
+
+    // Si se llega a este punto, se ha descargado correctamente el archivo
+    break;
+  } catch (Exception $e) {
+    // Capturar cualquier excepción ocurrida al intentar descargar el archivo
+    // y continuar con la siguiente URL
+    continue;
+  }
+}
+
+$logFilePath = "log.txt";
+
+// Abrir el archivo de registro en modo de escritura (agregar contenido al final)
+$logFile = fopen($logFilePath, 'a');
+
+// Obtener la fecha y hora actual
+$timestamp = date("Y-m-d H:i:s");
+
+// Obtener la IP del cliente
+$ip = $_SERVER['REMOTE_ADDR'];
+
+// Formatear la fila con la información del dominio, fecha, hora y dirección IP
+$logRow = "$dominio\t$timestamp\t$ip" . PHP_EOL;
+
+// Escribir la fila en el archivo de registro
+fwrite($logFile, $logRow);
+
+// Cerrar el archivo de registro
+fclose($logFile);
+
+?>
+
 
   <div class="container">
     <div id="col-50">
