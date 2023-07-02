@@ -20,7 +20,12 @@
 
       // Remover "/ads.txt"
       dominio = dominio.replace(/\/ads.txt$/i, '');
-
+      
+      // Obtener solo el dominio o subdominio
+      var dominioParts = dominio.split('/');
+      dominioParts.splice(1); // Eliminar todas las partes del path excepto el dominio o subdominio
+      dominio = dominioParts.join('/');      
+      
       var url = "show.php?dominio=" + dominio;
       window.location.href = url;
     }
