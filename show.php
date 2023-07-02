@@ -56,7 +56,19 @@
 <?php
 $dominio = $_GET['dominio'];
 
-if (strpos($dominio, 'http://') === 0 || strpos($dominio, 'https://') === 0) {
+$url = 'http://' . $dominio;
+$urlParsed = parse_url($url);
+
+if ($urlParsed === false || !isset($urlParsed['host'])) {
+  echo "Verifica la URL o prueba nuevamente.";
+  exit;
+}
+
+// Obtener el dominio
+$dominio = $urlParsed['host'];
+
+// Verificar si hay algo después del dominio
+if (isset($urlParsed['path']) || isset($urlParsed['query']) || isset($urlParsed['fragment'])) {
   echo "Verifica la URL o prueba nuevamente.";
   exit;
 }
