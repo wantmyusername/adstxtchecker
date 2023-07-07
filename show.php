@@ -209,42 +209,58 @@ fclose($logFile);
     </div>
     <h4>Rastreabilidad del sitio</h4>
     <div id="estado">
-      <?php
-        // URL del sitio web
-        $siteUrl = $url_f;
-        
-        // User-Agent a verificar
-        $userAgent = "Googlebot";
-        
-        // URL del archivo robots.txt
-        $robotsTxtUrl = $siteUrl . "/robots.txt";
-        
-        // Obtener el contenido del archivo robots.txt
-        $robotsTxtContent = file_get_contents($robotsTxtUrl);
-        
-        // Verificar si se puede rastrear el sitio para el User-Agent "Googlebot"
-        $lines = explode("\n", $robotsTxtContent);
-        $canCrawl = true;
-        
-        foreach ($lines as $line) {
-            $line = trim($line);
-            if (substr($line, 0, 10) === "User-agent" && stripos($line, "*") !== false) {
-                $canCrawl = false;
-                break;
-            } elseif (stripos($line, "User-agent: Mediapartners-Google") !== false) {
-                $canCrawl = true;
-            } elseif (stripos($line, "User-Agent: Googlebot") !== false) {
-                $canCrawl = true;
-            }
+<?php
+
+// URL del sitio web
+$siteUrl = $url_f;
+
+// User-Agent a verificar
+$userAgent = "Googlebot";
+
+// URL del archivo robots.txt
+$robotsTxtUrl = $siteUrl . "/robots.txt";
+
+// Obtener el contenido del archivo robots.txt
+$robotsTxtContent = file_get_contents($robotsTxtUrl);
+
+// Verificar si se puede rastrear el sitio para el User-Agent "Googlebot"
+$lines = explode("\n", $robotsTxtContent);
+$canCrawl = true;
+$disallowedAll = false;
+
+foreach ($lines as $line) {
+    $line = trim($line);
+    if (stripos($line, "User-agent:") !== false) {
+        $userAgentLine = trim(str_ireplace("User-agent:", "", $line));
+        if ($userAgentLine != "*" && stripos($userAgentLine, $userAgent) === false) {
+            $canCrawl = false;
+            break;
+        } elseif ($userAgentLine == "*" && stripos($line, "Disallow: /") !== false) {
+            $disallowedAll = true;
+            break;
         }
-        // Mostrar el resultado
-        if ($canCrawl) {
-            echo "¡Muy bien! Tu sitio puede ser rastreado por Google";
-        } else {
-            echo "¡CUIDADO! Google Search y AdSense no pueden leer tu sitio. Verifica tu archivo Robots.txt";
+    } elseif (stripos($line, "Disallow:") !== false) {
+        $disallowedPath = trim(str_ireplace("Disallow:", "", $line));
+        if ($disallowedPath == "/") {
+            $disallowedAll = true;
+            break;
+        } elseif ($disallowedPath != "" && stripos($siteUrl, $disallowedPath) === 0) {
+            $canCrawl = false;
+            break;
         }
-        
-        ?>            
+    }
+}
+
+// Mostrar el resultado
+if ($disallowedAll) {
+    echo "¡CUIDADO! Google Search y AdSense no pueden leer tu sitio. Verifica tu archivo Robots.txt";
+} elseif ($canCrawl) {
+    echo " ¡Muy bien! Tu sitio puede ser rastreado por Google";
+} else {
+    echo "¡CUIDADO! Google Search y AdSense no pueden leer tu sitio. Verifica tu archivo Robots.txt";
+}
+
+?>            
     </div>
   </div>
   <div id="col-50">
