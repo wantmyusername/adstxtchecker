@@ -253,11 +253,11 @@ foreach ($lines as $line) {
 
 // Mostrar el resultado
 if ($disallowedAll) {
-    echo "¡CUIDADO! Google Search y AdSense no pueden leer tu sitio. Verifica tu archivo Robots.txt";
+    echo "Google Search y AdSense no pueden leer tu sitio";
 } elseif ($canCrawl) {
-    echo " ¡Muy bien! Tu sitio puede ser rastreado por Google";
+    echo "Tu sitio puede ser rastreado por Google";
 } else {
-    echo "¡CUIDADO! Google Search y AdSense no pueden leer tu sitio. Verifica tu archivo Robots.txt";
+    echo "Google Search y AdSense no pueden leer tu sitio.";
 }
 
 ?>            
