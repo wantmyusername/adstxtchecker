@@ -210,57 +210,94 @@ fclose($logFile);
     <h4>Rastreabilidad del sitio</h4>
     <div id="estado">
 <?php
-
 // URL del sitio web
 $siteUrl = $url_f;
-
-// User-Agent a verificar
-$userAgent = "Googlebot";
 
 // URL del archivo robots.txt
 $robotsTxtUrl = $siteUrl . "/robots.txt";
 
-// Obtener el contenido del archivo robots.txt
-$robotsTxtContent = file_get_contents($robotsTxtUrl);
+// Verificar si el archivo robots.txt existe
+if (!url_exists($robotsTxtUrl)) {
+    echo "The robots.txt file does not exist.";
+} else {
 
-// Verificar si se puede rastrear el sitio para el User-Agent "Googlebot"
-$lines = explode("\n", $robotsTxtContent);
-$canCrawl = true;
-$disallowedAll = false;
+    // Obtener el contenido del archivo robots.txt
+    $robotsTxtContent = file_get_contents($robotsTxtUrl);
 
-foreach ($lines as $line) {
-    $line = trim($line);
-    if (stripos($line, "User-agent:") !== false) {
-        $userAgentLine = trim(str_ireplace("User-agent:", "", $line));
-        if ($userAgentLine != "*" && stripos($userAgentLine, $userAgent) === false) {
-            $canCrawl = false;
-            break;
-        } elseif ($userAgentLine == "*" && stripos($line, "Disallow: /") !== false) {
-            $disallowedAll = true;
-            break;
+    // Variables de control
+    $canCrawl = true;
+    $blockedSections = [];
+
+    // Parsear el contenido del archivo robots.txt
+    $lines = explode("\n", $robotsTxtContent);
+    $userAgent = "";
+    foreach ($lines as $line) {
+        $line = trim($line);
+
+        // Ignorar líneas con errores de sintaxis
+        if (
+            preg_match("/^(User-agent:|Disallow:|Allow:|Sitemap:)/i", $line) !== 1
+        ) {
+            continue;
         }
-    } elseif (stripos($line, "Disallow:") !== false) {
-        $disallowedPath = trim(str_ireplace("Disallow:", "", $line));
-        if ($disallowedPath == "/") {
-            $disallowedAll = true;
-            break;
-        } elseif ($disallowedPath != "" && stripos($siteUrl, $disallowedPath) === 0) {
+
+        // Verificar bloqueo de secciones
+        if (strncasecmp($line, "User-agent:", 11) === 0) {
+            $userAgent = trim(substr($line, 11));
+        } elseif (
+            strcasecmp($userAgent, "Googlebot") === 0 ||
+            strcasecmp($userAgent, "Mediapartners-Google") === 0
+        ) {
+            if (strncasecmp($line, "Disallow:", 9) === 0) {
+                $section = trim(substr($line, 9));
+                if ($section !== "") {
+                    $blockedSections[] = $section;
+                }
+            }
+        } elseif (strcasecmp($userAgent, "*") === 0) {
+            if (strncasecmp($line, "Disallow:", 9) === 0) {
+                $section = trim(substr($line, 9));
+                if ($section !== "") {
+                    $blockedSections[] = $section;
+                }
+            }
+        }
+
+        // Verificar bloqueo total del sitio
+        if (
+            strcasecmp($line, "User-agent: *") === 0 &&
+            strcasecmp(trim(next($lines)), "Disallow: /") === 0
+        ) {
             $canCrawl = false;
             break;
         }
     }
+
+    // Mostrar el resultado
+    if (!empty($blockedSections)) {
+        echo "The site is accessible, but certain sections are blocked in robots.txt <ul>";
+        foreach ($blockedSections as $section) {
+            echo "<li class='section_robots'>$section</li>";
+        }
+        echo "
+            </ul>
+        </div>
+        ";
+    } elseif (!$canCrawl) {
+        echo "The site is blocked for search engines.";
+    } else {
+        echo "Your site may be crawled by Google and other crawlers.";
+    }
 }
 
-// Mostrar el resultado
-if ($disallowedAll) {
-    echo "Google Search y AdSense no pueden leer tu sitio";
-} elseif ($canCrawl) {
-    echo "Tu sitio puede ser rastreado por Google";
-} else {
-    echo "Google Search y AdSense no pueden leer tu sitio.";
+// Función para verificar si una URL existe
+function url_exists($url)
+{
+    $file_headers = @get_headers($url);
+    return !(!$file_headers || $file_headers[0] == "HTTP/1.1 404 Not Found");
 }
-
-?>            
+?>
+           
     </div>
   </div>
   <div id="col-50">
